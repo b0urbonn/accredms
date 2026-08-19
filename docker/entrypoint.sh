@@ -5,9 +5,17 @@ set -e
 PORT="${PORT:-80}"
 sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/http.d/default.conf
 
-# Ensure writable storage permissions at runtime
+# Ensure storage directory structure exists with full permissions
+mkdir -p /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/logs \
+         /var/www/html/storage/app/public \
+         /var/www/html/storage/app/private \
+         /var/www/html/bootstrap/cache
+
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Run storage link if not already linked
 php artisan storage:link || true
