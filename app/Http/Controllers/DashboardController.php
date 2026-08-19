@@ -20,20 +20,29 @@ class DashboardController extends Controller
             $totalAreas = Area::count();
             $totalUsers = User::count();
             $totalDocuments = Document::count();
-            $totalSizeBytes = Document::sum('file_size_bytes');
+            $totalSizeBytes = Document::sum('file_size_bytes') ?? 0;
 
             $recentActivities = AuditLog::with('user')->orderBy('created_at', 'desc')->take(10)->get();
-            $areas = Area::withCount(['parameters', 'users'])->get();
+            $areas = Area::withCount(['parameters', 'users'])->orderBy('code')->get();
             $openDocumentRequests = AdditionalDocumentRequest::where('status', 'open')
                 ->with(['subfolder.parameterCategory.parameter.area', 'requester'])
                 ->latest()
                 ->get();
             $adminAreaTasks = $this->buildAreaTasks($areas, $openDocumentRequests);
 
+            $categoryCounts = \Illuminate\Support\Facades\DB::table('documents')
+                ->join('subfolders', 'documents.subfolder_id', '=', 'subfolders.id')
+                ->join('parameter_categories', 'subfolders.parameter_category_id', '=', 'parameter_categories.id')
+                ->join('categories', 'parameter_categories.category_id', '=', 'categories.id')
+                ->whereNull('documents.deleted_at')
+                ->select('categories.name', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+                ->groupBy('categories.name')
+                ->pluck('count', 'name');
+
             $categoryDistribution = [
-                'system_input' => Document::whereHas('subfolder.parameterCategory.category', fn($q) => $q->where('name', 'System Input and Process'))->count(),
-                'outcomes' => Document::whereHas('subfolder.parameterCategory.category', fn($q) => $q->where('name', 'Outcomes'))->count(),
-                'implementation' => Document::whereHas('subfolder.parameterCategory.category', fn($q) => $q->where('name', 'Implementation'))->count(),
+                'system_input' => (int) ($categoryCounts['System Input and Process'] ?? 0),
+                'outcomes' => (int) ($categoryCounts['Outcomes'] ?? 0),
+                'implementation' => (int) ($categoryCounts['Implementation'] ?? 0),
             ];
 
             return view('dashboards.admin', compact(
