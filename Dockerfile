@@ -38,8 +38,9 @@ RUN npm ci && npm run build
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy Nginx configuration
+# Copy Nginx and PHP configurations
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
