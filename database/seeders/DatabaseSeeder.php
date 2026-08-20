@@ -65,69 +65,82 @@ class DatabaseSeeder extends Seeder
         $accreditor->assignRole($accreditorRole);
 
         // 4. Create Sample Areas
-        $area1 = Area::create([
-            'code' => 'AREA-I',
-            'name' => 'Vision, Mission, Goals & Objectives',
-            'description' => 'Dissemination, acceptability, and alignment of institutional vision and program objectives.',
-            'status' => 'active',
-            'created_by' => $admin->id,
-        ]);
+        $area1 = Area::firstOrCreate(
+            ['code' => 'AREA-I'],
+            [
+                'name' => 'Vision, Mission, Goals & Objectives',
+                'description' => 'Dissemination, acceptability, and alignment of institutional vision and program objectives.',
+                'status' => 'active',
+                'created_by' => $admin->id,
+            ]
+        );
 
-        $area2 = Area::create([
-            'code' => 'AREA-II',
-            'name' => 'Faculty',
-            'description' => 'Academic qualifications, teaching efficiency, staff development, and performance evaluation.',
-            'status' => 'active',
-            'created_by' => $admin->id,
-        ]);
+        $area2 = Area::firstOrCreate(
+            ['code' => 'AREA-II'],
+            [
+                'name' => 'Faculty',
+                'description' => 'Academic qualifications, teaching efficiency, staff development, and performance evaluation.',
+                'status' => 'active',
+                'created_by' => $admin->id,
+            ]
+        );
 
-        $area3 = Area::create([
-            'code' => 'AREA-III',
-            'name' => 'Curriculum & Instruction',
-            'description' => 'Curriculum design, instructional processes, and academic outcomes.',
-            'status' => 'active',
-            'created_by' => $admin->id,
-        ]);
+        $area3 = Area::firstOrCreate(
+            ['code' => 'AREA-III'],
+            [
+                'name' => 'Curriculum & Instruction',
+                'description' => 'Curriculum design, instructional processes, and academic outcomes.',
+                'status' => 'active',
+                'created_by' => $admin->id,
+            ]
+        );
 
         // 5. Create Sample Parameters (ParameterObserver auto-attaches 3 categories per Parameter)
-        Parameter::create([
-            'area_id' => $area1->id,
-            'code' => '1.1',
-            'title' => 'Statement of Vision, Mission, Goals, and Objectives',
-            'description' => 'Documentary evidence of VMGO formulation and institutional approval.',
-            'sort_order' => 1,
-            'status' => 'active',
-        ]);
+        Parameter::firstOrCreate(
+            ['area_id' => $area1->id, 'code' => '1.1'],
+            [
+                'title' => 'Statement of Vision, Mission, Goals, and Objectives',
+                'description' => 'Documentary evidence of VMGO formulation and institutional approval.',
+                'sort_order' => 1,
+                'status' => 'active',
+            ]
+        );
 
-        Parameter::create([
-            'area_id' => $area1->id,
-            'code' => '1.2',
-            'title' => 'Dissemination & Acceptability of VMGO',
-            'description' => 'Evidence of stakeholder orientation, website posting, and survey responses.',
-            'sort_order' => 2,
-            'status' => 'active',
-        ]);
+        Parameter::firstOrCreate(
+            ['area_id' => $area1->id, 'code' => '1.2'],
+            [
+                'title' => 'Dissemination & Acceptability of VMGO',
+                'description' => 'Evidence of stakeholder orientation, website posting, and survey responses.',
+                'sort_order' => 2,
+                'status' => 'active',
+            ]
+        );
 
-        Parameter::create([
-            'area_id' => $area2->id,
-            'code' => '2.1',
-            'title' => 'Academic Qualifications and Faculty Profiles',
-            'description' => 'Degrees, transcript of records, licenses, and teaching assignments.',
-            'sort_order' => 1,
-            'status' => 'active',
-        ]);
+        Parameter::firstOrCreate(
+            ['area_id' => $area2->id, 'code' => '2.1'],
+            [
+                'title' => 'Academic Qualifications and Faculty Profiles',
+                'description' => 'Degrees, transcript of records, licenses, and teaching assignments.',
+                'sort_order' => 1,
+                'status' => 'active',
+            ]
+        );
 
         // 6. Assign Area I to Faculty (as Handler) and Accreditor (as Accreditor)
-        $area1->users()->attach($faculty->id, [
-            'assignment_role' => 'handler',
-            'assigned_by' => $admin->id,
-            'assigned_at' => now(),
-        ]);
+        if (!$area1->users()->where('user_id', $faculty->id)->where('assignment_role', 'handler')->exists()) {
+            $area1->users()->attach($faculty->id, [
+                'assignment_role' => 'handler',
+                'assigned_by' => $admin->id,
+                'assigned_at' => now(),
+            ]);
+        }
 
-        $area1->users()->attach($accreditor->id, [
-            'assignment_role' => 'accreditor',
-            'assigned_by' => $admin->id,
-            'assigned_at' => now(),
-        ]);
+        if (!$area1->users()->where('user_id', $accreditor->id)->where('assignment_role', 'accreditor')->exists()) {
+            $area1->users()->attach($accreditor->id, [
+                'assignment_role' => 'accreditor',
+                'assigned_by' => $admin->id,
+                'assigned_at' => now(),
+            ]);
+        }
     }
 }
